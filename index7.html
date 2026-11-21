@@ -1,0 +1,459 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 11 - User Login Validation</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+ font-family:Arial,sans-serif;
+ background:#f1f4f9;
+ color:#202b3c;
+}
+header{
+ background:#172b4d;
+ color:white;
+ padding:20px 7%;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:12px;
+}
+header h2{font-size:21px}
+nav button{
+ background:transparent;
+ color:white;
+ border:1px solid #8294b2;
+ padding:10px 15px;
+ border-radius:6px;
+ cursor:pointer;
+ margin-left:5px;
+}
+nav button:hover{background:#30496e}
+.container{
+ max-width:950px;
+ margin:35px auto;
+ padding:0 18px;
+}
+.card{
+ background:white;
+ padding:30px;
+ border-radius:12px;
+ box-shadow:0 5px 22px #172b4d12;
+ margin-bottom:22px;
+}
+h1{font-size:27px;margin-bottom:10px}
+h3{margin-bottom:16px}
+.subtitle{color:#718096;margin-bottom:25px}
+label{
+ display:block;
+ font-weight:bold;
+ margin:16px 0 7px;
+}
+input,select{
+ width:100%;
+ padding:13px;
+ border:1px solid #ccd4df;
+ border-radius:6px;
+ font-size:15px;
+}
+input:focus,select:focus{
+ outline:2px solid #9bbcff;
+ border-color:#477de0;
+}
+button{
+ cursor:pointer;
+ border:0;
+ border-radius:6px;
+ padding:12px 17px;
+ font-size:14px;
+}
+.primary{background:#2864d7;color:white}
+.primary:hover{background:#174cae}
+.secondary{background:#e8eef8;color:#263d61}
+.danger{background:#dc4545;color:white}
+.full{width:100%;margin-top:22px}
+.password-row{display:flex;gap:8px}
+.password-row input{flex:1}
+.password-row button{background:#e8eef8}
+.demo{
+ background:#f0f5ff;
+ padding:16px;
+ border-radius:8px;
+ margin-top:22px;
+ line-height:2;
+ font-size:14px;
+}
+.demo span{cursor:pointer;color:#245bc0;font-weight:bold}
+.message{
+ padding:25px;
+ border-radius:10px;
+ margin-bottom:20px;
+ text-align:center;
+}
+.success{background:#e8f8ee;color:#176a37}
+.failure{background:#fff0f0;color:#a72e2e}
+.message h1{margin:10px}
+.message .emoji{font-size:48px}
+.details{
+ background:#f7f9fc;
+ padding:18px;
+ border-radius:8px;
+ margin-top:20px;
+ line-height:2;
+}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+table{
+ width:100%;
+ border-collapse:collapse;
+ margin:15px 0 25px;
+ font-size:14px;
+}
+th,td{
+ border:1px solid #dce2eb;
+ padding:11px;
+ text-align:left;
+}
+th{background:#edf2f9}
+.table-wrap{overflow-x:auto}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+.tabs button{background:#e8eef8}
+.tabs button.active{background:#2864d7;color:white}
+.hidden{display:none}
+footer{text-align:center;color:#8290a5;padding:25px}
+@media(max-width:600px){
+ header{padding:18px}
+ .card{padding:20px}
+ h1{font-size:23px}
+ nav button{margin:3px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <h2>🔐 User Validation</h2>
+ <nav>
+  <button onclick="showPage('login')">🔑 User Login</button>
+  <button onclick="showPage('database')">🗄 Database Viewer</button>
+ </nav>
+</header>
+
+<main class="container">
+
+<!-- LOGIN PAGE -->
+<section id="login" class="card">
+ <p class="subtitle">EXPERIMENT 11 • USER VALIDATION</p>
+ <h1>User Login</h1>
+ <p class="subtitle">Submit your login name and password to validate against database records.</p>
+
+ <form id="loginForm">
+  <label>Login Name / Username</label>
+  <input id="username" placeholder="Enter login name" required>
+
+  <label>Password</label>
+  <div class="password-row">
+   <input id="password" type="password" placeholder="Enter password" required>
+   <button type="button" onclick="togglePassword()">👁</button>
+  </div>
+
+  <button class="primary full" type="submit">Submit & Validate →</button>
+ </form>
+
+ <div class="demo">
+  <b>Database Records Available – Click to test</b><br>
+  <span onclick="fillLogin('admin','admin123')">admin / admin123</span><br>
+  <span onclick="fillLogin('student','student123')">student / student123</span><br>
+  <span onclick="fillLogin('john_doe','password123')">john_doe / password123</span><br>
+  <span onclick="fillLogin('alice','secret456')">alice / secret456</span><br>
+  <span onclick="fillLogin('invalid_demo','wrong')">invalid_demo / failure test</span>
+ </div>
+</section>
+
+<!-- SUCCESS PAGE -->
+<section id="successPage" class="card hidden">
+ <div class="message success">
+  <div class="emoji">✅</div>
+  <h1>Login Successful!</h1>
+  <p>Welcome back, <b id="welcomeName">User</b></p>
+ </div>
+ <h3>Authentication Successful</h3>
+ <p>The submitted login credentials matched a record in the users table.</p>
+ <div class="details" id="successDetails"></div>
+ <div class="actions">
+  <button class="primary" onclick="showPage('database')">🗄 View Database Tables</button>
+  <button class="secondary" onclick="logout()">Logout ←</button>
+ </div>
+</section>
+
+<!-- FAILURE PAGE -->
+<section id="failurePage" class="card hidden">
+ <div class="message failure">
+  <div class="emoji">❌</div>
+  <h1>Login Failed</h1>
+  <p>Credentials checked: No matching record found.</p>
+ </div>
+ <h3>Failure: Invalid Credentials</h3>
+ <p>The username and password combination does not match any database record.</p>
+ <div class="details" id="failureDetails"></div>
+ <button class="primary full" onclick="showPage('login')">↺ Try Again</button>
+</section>
+
+<!-- DATABASE PAGE -->
+<section id="database" class="card hidden">
+ <p class="subtitle">DATABASE MANAGEMENT</p>
+ <h1>Database Tables Viewer</h1>
+ <p class="subtitle">A client-side demonstration of a relational database.</p>
+
+ <div class="tabs">
+  <button class="active" onclick="showTable('usersTable',this)">Users</button>
+  <button onclick="showTable('rolesTable',this)">Roles</button>
+  <button onclick="showTable('logsTable',this)">Login Logs</button>
+ </div>
+
+ <div id="usersTable">
+  <h3>Table 1: users</h3>
+  <div class="table-wrap">
+   <table>
+    <thead><tr>
+     <th>ID</th><th>Username</th><th>Password</th>
+     <th>Full Name</th><th>Role</th><th>Email</th>
+    </tr></thead>
+    <tbody id="usersBody"></tbody>
+   </table>
+  </div>
+ </div>
+
+ <div id="rolesTable" class="hidden">
+  <h3>Table 2: roles</h3>
+  <div class="table-wrap">
+   <table>
+    <thead><tr><th>Role ID</th><th>Role Name</th><th>Access Level</th><th>Description</th></tr></thead>
+    <tbody id="rolesBody"></tbody>
+   </table>
+  </div>
+ </div>
+
+ <div id="logsTable" class="hidden">
+  <h3>Table 3: login_logs</h3>
+  <div class="table-wrap">
+   <table>
+    <thead><tr><th>Log ID</th><th>Username Attempted</th><th>Timestamp</th><th>Validation Result</th></tr></thead>
+    <tbody id="logsBody"></tbody>
+   </table>
+  </div>
+ </div>
+
+ <div class="actions">
+  <button class="primary" onclick="showAddUser()">+ Add User</button>
+  <button class="danger" onclick="resetDatabase()">Reset DB</button>
+  <button class="secondary" onclick="showPage('login')">← Back to Login</button>
+ </div>
+</section>
+
+<!-- ADD USER FORM -->
+<section id="addUser" class="card hidden">
+ <h1>Add New User to Database</h1>
+ <p class="subtitle">Enter the details to create a new user record.</p>
+
+ <form id="addForm">
+  <label>Full Name *</label>
+  <input id="newName" placeholder="e.g. Rachel Green" required>
+
+  <label>Username / Login Name *</label>
+  <input id="newUsername" placeholder="e.g. rachel" required>
+
+  <label>Password *</label>
+  <input id="newPassword" type="password" placeholder="Enter a password" required>
+
+  <label>Email Address</label>
+  <input id="newEmail" type="email" placeholder="e.g. rachel@college.edu">
+
+  <label>Role</label>
+  <select id="newRole">
+   <option value="2">Student</option>
+   <option value="1">Admin</option>
+  </select>
+
+  <div class="actions">
+   <button class="primary" type="submit">Save to Database</button>
+   <button class="secondary" type="button" onclick="showPage('database')">Cancel</button>
+  </div>
+ </form>
+</section>
+
+</main>
+
+<footer>Lab 11 • User Login & Database Validation</footer>
+
+<script>
+const defaultUsers = [
+ {id:1,username:"admin",password:"admin123",name:"Administrator",role:1,email:"admin@college.edu"},
+ {id:2,username:"student",password:"student123",name:"Student User",role:2,email:"student@college.edu"},
+ {id:3,username:"john_doe",password:"password123",name:"John Doe",role:2,email:"john@gmail.com"},
+ {id:4,username:"alice",password:"secret456",name:"Alice Smith",role:2,email:"alice@gmail.com"}
+];
+
+const roles = [
+ {id:1,name:"Admin",level:"Full Access",description:"Administrator access"},
+ {id:2,name:"Student",level:"Limited Access",description:"Student access"}
+];
+
+function loadData(key, fallback){
+ try{
+  const saved=localStorage.getItem(key);
+  return saved ? JSON.parse(saved) : fallback;
+ }catch(e){return fallback;}
+}
+
+let users=loadData("lab11_users",defaultUsers);
+let logs=loadData("lab11_logs",[]);
+
+function saveData(){
+ localStorage.setItem("lab11_users",JSON.stringify(users));
+ localStorage.setItem("lab11_logs",JSON.stringify(logs));
+}
+
+function showPage(page){
+ ["login","successPage","failurePage","database","addUser"].forEach(id=>{
+  document.getElementById(id).classList.add("hidden");
+ });
+ document.getElementById(page).classList.remove("hidden");
+ if(page==="database") renderDatabase();
+ window.scrollTo(0,0);
+}
+
+function togglePassword(){
+ const p=document.getElementById("password");
+ p.type=p.type==="password"?"text":"password";
+}
+
+function fillLogin(u,p){
+ document.getElementById("username").value=u;
+ document.getElementById("password").value=p;
+}
+
+function addLog(username,result){
+ logs.unshift({
+  id:logs.length?Math.max(...logs.map(l=>l.id))+1:1,
+  username,
+  time:new Date().toLocaleString(),
+  result
+ });
+ saveData();
+}
+
+document.getElementById("loginForm").addEventListener("submit",function(e){
+ e.preventDefault();
+ const username=document.getElementById("username").value.trim();
+ const password=document.getElementById("password").value;
+ const user=users.find(u=>u.username.toLowerCase()===username.toLowerCase() && u.password===password);
+
+ if(user){
+  addLog(username,"Successful");
+  document.getElementById("welcomeName").textContent=user.name;
+  document.getElementById("successDetails").innerHTML=`
+   <b>User Full Name:</b> ${safe(user.name)}<br>
+   <b>Login Name:</b> ${safe(user.username)}<br>
+   <b>Assigned Role:</b> ${user.role===1?"Admin":"Student"}<br>
+   <b>Database User ID:</b> ${user.id}<br>
+   <b>Access Privileges:</b> ${user.role===1?"Full Access":"Limited Access"}<br>
+   <b>Validation Timestamp:</b> ${new Date().toLocaleString()}<br>
+   <b>Email Address:</b> ${safe(user.email||"-")}
+  `;
+  showPage("successPage");
+ }else{
+  addLog(username,"Failed");
+  document.getElementById("failureDetails").innerHTML=`
+   <b>Submitted Login Name:</b> ${safe(username)}<br>
+   <b>Database Check Result:</b> Record Not Found / Password Mismatch<br>
+   <b>Attempt Time:</b> ${new Date().toLocaleString()}
+  `;
+  showPage("failurePage");
+ }
+});
+
+function safe(value){
+ return String(value).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function logout(){
+ document.getElementById("loginForm").reset();
+ showPage("login");
+}
+
+function showTable(id,button){
+ ["usersTable","rolesTable","logsTable"].forEach(x=>{
+  document.getElementById(x).classList.add("hidden");
+ });
+ document.getElementById(id).classList.remove("hidden");
+ document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+ button.classList.add("active");
+}
+
+function renderDatabase(){
+ document.getElementById("usersBody").innerHTML=users.map(u=>`
+  <tr><td>${u.id}</td><td>${safe(u.username)}</td>
+  <td>••••••</td><td>${safe(u.name)}</td>
+  <td>${u.role===1?"Admin":"Student"}</td><td>${safe(u.email||"-")}</td></tr>
+ `).join("") || '<tr><td colspan="6">No users found</td></tr>';
+
+ document.getElementById("rolesBody").innerHTML=roles.map(r=>`
+  <tr><td>${r.id}</td><td>${r.name}</td><td>${r.level}</td><td>${r.description}</td></tr>
+ `).join("");
+
+ document.getElementById("logsBody").innerHTML=logs.map(l=>`
+  <tr><td>${l.id}</td><td>${safe(l.username)}</td>
+  <td>${safe(l.time)}</td><td>${safe(l.result)}</td></tr>
+ `).join("") || '<tr><td colspan="4">No login attempts yet</td></tr>';
+}
+
+function showAddUser(){showPage("addUser");}
+
+document.getElementById("addForm").addEventListener("submit",function(e){
+ e.preventDefault();
+ const username=document.getElementById("newUsername").value.trim();
+
+ if(users.some(u=>u.username.toLowerCase()===username.toLowerCase())){
+  alert("Username already exists. Please choose another.");
+  return;
+ }
+
+ users.push({
+  id:users.length?Math.max(...users.map(u=>u.id))+1:1,
+  username,
+  password:document.getElementById("newPassword").value,
+  name:document.getElementById("newName").value.trim(),
+  email:document.getElementById("newEmail").value.trim(),
+  role:Number(document.getElementById("newRole").value)
+ });
+
+ saveData();
+ alert("New user successfully added!");
+ this.reset();
+ showPage("database");
+});
+
+function resetDatabase(){
+ if(confirm("Reset all users and login logs to default records?")){
+  users=JSON.parse(JSON.stringify(defaultUsers));
+  logs=[];
+  saveData();
+  renderDatabase();
+  alert("Database has been reset.");
+ }
+}
+
+saveData();
+showPage("login");
+</script>
+
+</body>
+</html>
